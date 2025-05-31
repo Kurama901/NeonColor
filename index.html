@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neon Color Match</title>
+    <style>
+        :root {
+            --primary: #6e45e2;
+            --secondary: #88d3ce;
+            --accent: #ff7e5f;
+            --dark: #1a1a2e;
+            --light: #f8f9fa;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--dark) 0%, #16213e 100%);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--light);
+            font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+        
+        .game-container {
+            width: 95%;
+            max-width: 450px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 25px;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3),
+                        0 0 15px rgba(110, 69, 226, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .game-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, 
+                        rgba(110, 69, 226, 0.1) 0%, 
+                        rgba(136, 211, 206, 0.05) 30%, 
+                        transparent 70%);
+            animation: rotate 20s linear infinite;
+            z-index: -1;
+        }
+        
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        h1 {
+            margin-bottom: 20px;
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 10px rgba(110, 69, 226, 0.3);
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 25px;
+        }
+        
+        .score-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .score-icon {
+            margin-right: 8px;
+            color: var(--accent);
+        }
+        
+        .timer-container {
+            background: rgba(255, 126, 95, 0.1);
+            padding: 10px 15px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 126, 95, 0.2);
+        }
+        
+        .timer-icon {
+            margin-right: 8px;
+            color: var(--accent);
+        }
+        
+        .color-display {
+            width: 100%;
+            height: 100px;
+            margin: 20px 0;
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 26px;
+            font-weight: bold;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .color-display::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, 
+                      rgba(255,255,255,0.3) 0%, 
+                      rgba(255,255,255,0) 60%);
+            z-index: -1;
+        }
+        
+        .options-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 25px 0;
+        }
+        
+        .color-option {
+            height: 90px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .color-option::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, 
+                      rgba(255,255,255,0.3) 0%, 
+                      rgba(255,255,255,0) 60%);
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .color-option:active {
+            transform: scale(0.95);
+        }
+        
+        .color-option:hover::after {
+            opacity: 1;
+        }
+        
+        .combo-counter {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 40px;
+            font-weight: bold;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            animation: comboFloat 1s ease-out forwards;
+        }
+        
+        @keyframes comboFloat {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translate(-50%, -150%) scale(1.2); opacity: 0; }
+        }
+        
+        .particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 20;
+            animation: particleFade 1s ease-out forwards;
+        }
+        
+        @keyframes particleFade {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+        
+        .game-over {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(26, 26, 46, 0.9);
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+        
+        .game-over-content {
+            background: linear-gradient(135deg, rgba(30, 30, 60, 0.9) 0%, rgba(20, 20, 40, 0.9) 100%);
+            padding: 30px;
+            border-radius: 25px;
+            text-align: center;
+            color: var(--light);
+            max-width: 90%;
+            width: 400px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transform-style: preserve-3d;
+            animation: modalEnter 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        
+        @keyframes modalEnter {
+            0% { transform: translateY(50px) scale(0.9); opacity: 0; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        
+        .game-over h2 {
+            font-size: 32px;
+            margin-bottom: 15px;
+            background: linear-gradient(90deg, var(--accent), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: var(--secondary);
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn:active {
+            transform: scale(0.95);
+        }
+        
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right,
+                rgba(255, 255, 255, 0) 45%,
+                rgba(255, 255, 255, 0.3) 50%,
+                rgba(255, 255, 255, 0) 55%
+            );
+            transform: rotate(30deg);
+            transition: all 0.3s;
+        }
+        
+        .btn:hover::after {
+            left: 100%;
+        }
+        
+        .difficulty-selector {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .difficulty-btn {
+            padding: 10px 20px;
+            margin: 0 5px;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--light);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .difficulty-btn.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            box-shadow: 0 0 15px rgba(110, 69, 226, 0.5);
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            opacity: 0;
+            z-index: 999;
+            animation: confettiFall 5s linear forwards;
+        }
+        
+        @keyframes confettiFall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+        
+        @media (max-width: 500px) {
+            .game-container {
+                padding: 20px;
+                border-radius: 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .color-display {
+                height: 80px;
+                font-size: 22px;
+            }
+            
+            .color-option {
+                height: 80px;
+                font-size: 16px;
+            }
+            
+            .game-over-content {
+                padding: 20px;
+                width: 90%;
+            }
+            
+            .game-over h2 {
+                font-size: 26px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Neon Color Match</h1>
+        <div class="header">
+            <div class="score-container">
+                <span class="score-icon">★</span>
+                <span id="score">0</span>
+            </div>
+            <div class="timer-container">
+                <span class="timer-icon">⏱️</span>
+                <span id="time">60</span>
+            </div>
+        </div>
+        <div class="color-display" id="colorDisplay">COLOR</div>
+        <div class="options-container" id="optionsContainer"></div>
+<div class="copyright" style="margin-top: 20px; font-size: 12px; opacity: 0.7; text-align: center;">
+        &copy;  2025 Neon Color | Created by @lutfibatawi </div>
+    </div>
+    
+    <div class="game-over" id="gameOver">
+        <div class="game-over-content">
+            <h2>Game Over!</h2>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value" id="finalScore">0</div>
+                    <div class="stat-label">Score</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="finalHighScore">0</div>
+                    <div class="stat-label">High Score</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="finalCorrect">0</div>
+                    <div class="stat-label">Correct</div>
+                </div>
+            </div>
+            <button class="btn btn-primary" id="restartBtn">Play Again</button>
+            <button class="btn btn-secondary" id="menuBtn">Main Menu</button>
+        </div>
+    </div>
+    
+    <audio id="correctSound" preload="auto">
+        <source src="data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAA8AAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQsRbAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQMSkAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV" type="audio/mpeg">
+    </audio>
+    <audio id="wrongSound" preload="auto">
+        <source src="data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAA8AAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQsRbAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQMSkAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV" type="audio/mpeg">
+    </audio>
+    <audio id="gameOverSound" preload="auto">
+        <source src="data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAA8AAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQsRbAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQMSkAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV" type="audio/mpeg">
+    </audio>
+    
+    <script>
+        // Game variables
+        var score = 0;
+        var highScore = localStorage.getItem('highScore') || 0;
+        var timeLeft = 60;
+        var timer;
+        var combo = 0;
+        var maxCombo = 0;
+        var correctAnswers = 0;
+        var totalQuestions = 0;
+        var difficulty = 'medium'; // easy, medium, hard
+        var colors = [
+            { name: 'RED', hex: '#FF5252' },
+            { name: 'BLUE', hex: '#4285F4' },
+            { name: 'GREEN', hex: '#0F9D58' },
+            { name: 'YELLOW', hex: '#FFB900' },
+            { name: 'PURPLE', hex: '#9C27B0' },
+            { name: 'ORANGE', hex: '#FF9800' },
+            { name: 'PINK', hex: '#E91E63' },
+            { name: 'BROWN', hex: '#795548' },
+            { name: 'BLACK', hex: '#212121' },
+            { name: 'WHITE', hex: '#F5F5F5' },
+            { name: 'CYAN', hex: '#00BCD4' },
+            { name: 'LIME', hex: '#CDDC39' },
+            { name: 'TEAL', hex: '#009688' },
+            { name: 'INDIGO', hex: '#3F51B5' },
+            { name: 'AMBER', hex: '#FFC107' }
+        ];
+        
+        // Sound effects
+        var correctSound = document.getElementById('correctSound');
+        var wrongSound = document.getElementById('wrongSound');
+        var gameOverSound = document.getElementById('gameOverSound');
+        
+        // DOM elements
+        var colorDisplay = document.getElementById('colorDisplay');
+        var optionsContainer = document.getElementById('optionsContainer');
+        var scoreElement = document.getElementById('score');
+        var timeElement = document.getElementById('time');
+        var gameOverScreen = document.getElementById('gameOver');
+        var finalScoreElement = document.getElementById('finalScore');
+        var finalHighScoreElement = document.getElementById('finalHighScore');
+        var finalCorrectElement = document.getElementById('finalCorrect');
+        var restartBtn = document.getElementById('restartBtn');
+        var menuBtn = document.getElementById('menuBtn');
+        
+        // Initialize game
+        function initGame() {
+            score = 0;
+            timeLeft = 60;
+            combo = 0;
+            maxCombo = 0;
+            correctAnswers = 0;
+            totalQuestions = 0;
+            
+            scoreElement.textContent = score;
+            timeElement.textContent = timeLeft;
+            
+            clearInterval(timer);
+            timer = setInterval(updateTimer, 1000);
+            
+            generateQuestion();
+            
+            // Reset game over screen if it was showing
+            gameOverScreen.style.display = 'none';
+        }
+        
+        // Generate a new question based on difficulty
+        function generateQuestion() {
+            // Filter colors based on difficulty
+            var availableColors;
+            switch(difficulty) {
+                case 'easy':
+                    availableColors = colors.slice(0, 8); // First 8 basic colors
+                    break;
+                case 'hard':
+                    availableColors = colors;
+                    break;
+                case 'medium':
+                default:
+                    availableColors = colors.slice(0, 12); // First 12 colors
+                    break;
+            }
+            
+            // Get a random color name
+            var correctColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+            
+            // Display the color name (might not match the actual color)
+            colorDisplay.textContent = correctColor.name;
+            
+            // Set the display to a random color (might not match the name)
+            var displayColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+            colorDisplay.style.background = displayColor.hex;
+            
+            // Set text color based on background brightness
+            var brightness = getBrightness(displayColor.hex);
+            colorDisplay.style.color = brightness > 130 ? '#333' : 'white';
+            
+            // Generate options (one correct, three random)
+            var options = [correctColor];
+            while (options.length < 4) {
+                var randomColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+                if (!options.some(function(c) { return c.name === randomColor.name; })) {
+                    options.push(randomColor);
+                }
+            }
+            
+            // Shuffle options
+            options = shuffleArray(options);
+            
+            // Create option buttons
+            optionsContainer.innerHTML = '';
+            options.forEach(function(color) {
+                var option = document.createElement('div');
+                option.className = 'color-option';
+                option.style.background = color.hex;
+                
+                // Set text color based on background brightness
+                var brightness = getBrightness(color.hex);
+                option.style.color = brightness > 130 ? '#333' : 'white';
+                
+                option.textContent = color.name;
+                option.addEventListener('click', function() {
+                    checkAnswer(color.name === correctColor.name, option);
+                });
+                optionsContainer.appendChild(option);
+            });
+            
+            totalQuestions++;
+        }
+        
+        // Check if answer is correct with visual effects
+        function checkAnswer(isCorrect, clickedElement) {
+            if (isCorrect) {
+                // Correct answer
+                score += 10 + Math.floor(combo / 3);
+                combo++;
+                if (combo > maxCombo) maxCombo = combo;
+                correctAnswers++;
+                
+                scoreElement.textContent = score;
+                
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('highScore', highScore);
+                }
+                
+                // Visual feedback
+                colorDisplay.style.transform = 'scale(1.05)';
+                setTimeout(function() {
+                    colorDisplay.style.transform = 'scale(1)';
+                }, 200);
+                
+                // Play correct sound
+                correctSound.currentTime = 0;
+                correctSound.play();
+                
+                // Show combo if > 1
+                if (combo > 1) {
+                    showCombo(clickedElement);
+                }
+                
+                // Create particles
+                createParticles(clickedElement, true);
+            } else {
+                // Wrong answer
+                combo = 0;
+                
+                // Visual feedback
+                clickedElement.style.animation = 'shake 0.5s';
+                setTimeout(function() {
+                    clickedElement.style.animation = '';
+                }, 500);
+                
+                // Play wrong sound
+                wrongSound.currentTime = 0;
+                wrongSound.play();
+                
+                // Create particles
+                createParticles(clickedElement, false);
+            }
+            
+            setTimeout(generateQuestion, isCorrect ? 500 : 1000);
+        }
+        
+        // Show combo counter
+        function showCombo(element) {
+            var comboElement = document.createElement('div');
+            comboElement.className = 'combo-counter';
+            comboElement.textContent = combo + ' COMBO!';
+            comboElement.style.color = getRandomBrightColor();
+            
+            var rect = element.getBoundingClientRect();
+            comboElement.style.left = rect.left + rect.width / 2 + 'px';
+            comboElement.style.top = rect.top + rect.height / 2 + 'px';
+            
+            document.body.appendChild(comboElement);
+            
+            setTimeout(function() {
+                comboElement.remove();
+            }, 1000);
+        }
+        
+        // Create particles effect
+        function createParticles(element, isCorrect) {
+            var rect = element.getBoundingClientRect();
+            var centerX = rect.left + rect.width / 2;
+            var centerY = rect.top + rect.height / 2;
+            
+            for (var i = 0; i < 15; i++) {
+                var particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.background = isCorrect ? getRandomBrightColor() : '#FF5252';
+                
+                // Random direction and distance
+                var angle = Math.random() * Math.PI * 2;
+                var distance = 50 + Math.random() * 50;
+                var tx = Math.cos(angle) * distance;
+                var ty = Math.sin(angle) * distance;
+                
+                particle.style.setProperty('--tx', tx + 'px');
+                particle.style.setProperty('--ty', ty + 'px');
+                
+                particle.style.left = centerX + 'px';
+                particle.style.top = centerY + 'px';
+                
+                document.body.appendChild(particle);
+                
+                // Remove after animation
+                setTimeout(function() {
+                    particle.remove();
+                }, 1000);
+            }
+        }
+        
+        // Update timer
+        function updateTimer() {
+            timeLeft--;
+            timeElement.textContent = timeLeft;
+            
+            // Change color when time is running out
+            if (timeLeft <= 10) {
+                timeElement.style.color = '#FF5252';
+                timeElement.style.animation = 'pulse 0.5s infinite alternate';
+            }
+            
+            if (timeLeft <= 0) {
+                endGame();
+            }
+        }
+        
+        // End game with effects
+        function endGame() {
+            clearInterval(timer);
+            
+            // Play game over sound
+            gameOverSound.currentTime = 0;
+            gameOverSound.play();
+            
+            // Show final stats
+            finalScoreElement.textContent = score;
+            finalHighScoreElement.textContent = highScore;
+            finalCorrectElement.textContent = Math.round((correctAnswers / totalQuestions) * 100) + '%';
+            
+            // Create confetti
+            createConfetti();
+            
+            // Show game over screen
+            gameOverScreen.style.display = 'flex';
+        }
+        
+        // Create confetti effect
+        function createConfetti() {
+            var colors = ['#FF5252', '#4285F4', '#0F9D58', '#FFB900', '#9C27B0', '#FF9800', '#E91E63'];
+            
+            for (var i = 0; i < 100; i++) {
+                var confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.width = 5 + Math.random() * 10 + 'px';
+                confetti.style.height = 5 + Math.random() * 10 + 'px';
+                confetti.style.animationDuration = 2 + Math.random() * 3 + 's';
+                confetti.style.animationDelay = Math.random() * 2 + 's';
+                
+                document.body.appendChild(confetti);
+                
+                // Remove after animation
+                setTimeout(function() {
+                    confetti.remove();
+                }, 5000);
+            }
+        }
+        
+        // Helper functions
+        function shuffleArray(array) {
+            for (var i = array.length - 1; i > 0; i--) {
+                var j = Math.floor(Math.random() * (i + 1));
+                var temp = array[i];
+                array[i] = array[j];
+                array[j] = temp;
+            }
+            return array;
+        }
+        
+        function getBrightness(hex) {
+            var r = parseInt(hex.substr(1, 2), 16);
+            var g = parseInt(hex.substr(3, 2), 16);
+            var b = parseInt(hex.substr(5, 2), 16);
+            return (r * 299 + g * 587 + b * 114) / 1000;
+        }
+        
+        function getRandomBrightColor() {
+            var brightColors = [
+                '#FF5252', '#4285F4', '#0F9D58', '#FFB900', 
+                '#9C27B0', '#FF9800', '#E91E63', '#00BCD4'
+            ];
+            return brightColors[Math.floor(Math.random() * brightColors.length)];
+        }
+        
+        // Event listeners
+        restartBtn.addEventListener('click', initGame);
+        menuBtn.addEventListener('click', function() {
+            // In a full game, you'd go back to main menu
+            // For this demo, just restart
+            initGame();
+        });
+        
+        // Start the game
+        initGame();
+    </script>
+</body>
+</html>
